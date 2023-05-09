@@ -1,0 +1,313 @@
+using OpenQA.Selenium;
+using NUnit.Framework;
+using OpenQA.Selenium.Chrome;
+using System;
+
+namespace QA_Task
+{
+    public class Tests
+    {
+        private const string base_url = "https://qa-task.immedis.com/";
+
+        private WebDriver driver;
+        [SetUp]
+        public void OpenBrowser()
+        {
+            this.driver = new ChromeDriver();
+            driver.Navigate().GoToUrl(base_url);
+            driver.Manage().Window.Maximize();
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+        }
+        [TearDown]
+        public void closebrowser()
+        {
+            this.driver.Quit();
+        }
+
+        [Test]
+        public void Login()
+        {
+            var user_name_field = driver.FindElement(By.XPath("//input[@name='username']"));
+            user_name_field.Clear();
+            user_name_field.SendKeys("admin");
+
+            var password_field = driver.FindElement(By.XPath("//input[@name='password']"));
+            password_field.Clear();
+            password_field.SendKeys("123456");
+
+            var sign_in_button = driver.FindElement(By.XPath("//div[text()='Sign In']"));
+            sign_in_button.Click();
+
+            var header_index = driver.FindElement(By.XPath("//h2[contains(text(),'Index')]")).Text;
+
+            Assert.That(header_index, Is.EqualTo("Index"));
+        }
+        [Test]
+        public void Create_New_User()
+        {
+            driver.Navigate().GoToUrl(base_url + "Users");
+            var accept_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_button.Click();
+
+            var create_new_button = driver.FindElement(By.XPath("//div//a[@href='/Users/Create']"));
+            create_new_button.Click();
+
+            var header_create = driver.FindElement(By.XPath("//h2[contains(text(),'Create')]")).Text;
+
+            Assert.That(header_create, Is.EqualTo("Create"));
+
+            var name_input_field = driver.FindElement(By.XPath("//input[@id='Name']"));
+            name_input_field.Click();
+            var new_user_name = "George" + DateTime.Now.Ticks;
+            name_input_field.SendKeys(new_user_name);
+
+            var create_button = driver.FindElement(By.XPath("//input[@value='Create']"));
+            create_button.Click();
+
+            var users_list = driver.FindElement(By.XPath("//div[@class='container body-content']"));
+
+            Assert.That(users_list.Text, Does.Contain(new_user_name));
+        }
+        [Test]
+        public void Create_New_User_With_Empty_Field()
+        {
+            driver.Navigate().GoToUrl(base_url + "Users");
+            var accept_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_button.Click();
+            var create_new_button = driver.FindElement(By.XPath("//div//a[@href='/Users/Create']"));
+            create_new_button.Click();
+
+            var header_create = driver.FindElement(By.XPath("//h2[contains(text(),'Create')]")).Text;
+
+            Assert.That(header_create, Is.EqualTo("Create"));
+
+            var name_input_field = driver.FindElement(By.XPath("//input[@id='Name']"));
+            name_input_field.Clear();
+
+            var create_button = driver.FindElement(By.XPath("//input[@value='Create']"));
+            create_button.Click();
+
+            var error_header = driver.FindElement(By.XPath("//h1[text()='Error.']"));
+            var error_message = driver.FindElement(By.XPath("//h2[text()='An error occurred while processing your request.']"));
+
+            Assert.That(error_header.Text, Is.EqualTo("Error."));
+            Assert.That(error_message.Text, Is.EqualTo("An error occurred while processing your request."));
+
+        }
+        [Test]
+        public void Users_List()
+        {
+            driver.Navigate().GoToUrl(base_url + "Users");
+            var accept_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_button.Click();
+
+            var header_index = driver.FindElement(By.XPath("//h2[contains(text(),'Index')]")).Text;
+            Assert.That(header_index, Is.EqualTo("Index"));
+
+            var edit_user_button = driver.FindElement(By.XPath("//a[contains(@href,'Edit')]"));
+            var user_details_button = driver.FindElement(By.XPath("//a[contains(@href,'Details')]"));
+            var delete_user_button = driver.FindElement(By.XPath("//a[@href='/api/Users/122']"));
+
+            Assert.That(edit_user_button.Text, Is.EqualTo("Edit"));
+            Assert.That(user_details_button.Text, Is.EqualTo("Details"));
+            Assert.That(delete_user_button.Text, Is.EqualTo("Delete"));
+        }
+        [Test]
+        public void Books_List()
+        {
+            driver.Navigate().GoToUrl(base_url + "Users");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var books_button = driver.FindElement(By.XPath("//a[text()='Books']"));
+            books_button.Click();
+
+            var books_screen = driver.FindElement(By.XPath("//body"));
+
+            var name_column = driver.FindElement(By.XPath("//th[contains(text(),'Name')]")).Text;
+            var author_column = driver.FindElement(By.XPath("//th[contains(text(),'Author')]")).Text;
+            var genre_column = driver.FindElement(By.XPath("//th[contains(text(),'Genre')]")).Text;
+            var quontity_column = driver.FindElement(By.XPath("//th[contains(text(),'Quontity')]")).Text;
+            Assert.That(books_screen.Text, Does.Contain(name_column));
+            Assert.That(books_screen.Text, Does.Contain(author_column));
+            Assert.That(books_screen.Text, Does.Contain(genre_column));
+            Assert.That(books_screen.Text, Does.Contain(quontity_column));
+
+            var edit_user_button = driver.FindElement(By.XPath("//a[contains(@href,'Edit')]"));
+            var user_details_button = driver.FindElement(By.XPath("//a[contains(@href,'Details')]"));
+            var delete_user_button = driver.FindElement(By.XPath("//a[text()='Delete']"));
+            Assert.That(edit_user_button.Text, Is.EqualTo("Edit"));
+            Assert.That(user_details_button.Text, Is.EqualTo("Details"));
+            Assert.That(delete_user_button.Text, Is.EqualTo("Delete"));
+        }
+        [Test]
+        public void Create_New_Book_Screen()
+        {
+            driver.Navigate().GoToUrl(base_url + "Books");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var create_new_button = driver.FindElement(By.XPath("//a[text()='Create New']"));
+            create_new_button.Click();
+
+            var create_page_header = driver.FindElement(By.XPath("//h2[text()='Create']"));
+
+            Assert.That(create_page_header.Text, Is.EqualTo("Create"));
+
+        }
+        [Test]
+        public void Create_New_Book()
+        {
+            driver.Navigate().GoToUrl(base_url + "Books");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var create_new_book_button = driver.FindElement(By.XPath("//a[text()='Create New']"));
+            create_new_book_button.Click();
+
+            var name_input_field = driver.FindElement(By.XPath("//input[@id='Name']"));
+            name_input_field.Click();
+            var new_book_name = "Green Mile";
+            name_input_field.SendKeys(new_book_name);
+
+            var author_input_field = driver.FindElement(By.XPath("//input[@id='Author']"));
+            author_input_field.Click();
+            author_input_field.SendKeys("Stephen King");
+
+            var genre_input_field = driver.FindElement(By.XPath("//input[@id='Genre']"));
+            genre_input_field.Click();
+            genre_input_field.SendKeys("Drama");
+
+            var quntity_input_field = driver.FindElement(By.XPath("//input[@id='Quontity']"));
+            quntity_input_field.Click();
+            quntity_input_field.SendKeys("5");
+
+            var create_book_button = driver.FindElement(By.XPath("//input[@type='submit']"));
+            create_book_button.Click();
+
+            var books_list = driver.FindElement(By.XPath("//div[@class='container body-content']"));
+
+            Assert.That(books_list.Text, Does.Contain(new_book_name));
+
+        }
+        [Test]
+        public void Create_New_Book_With_Empty_Fields()
+        {
+            driver.Navigate().GoToUrl(base_url + "Books");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var create_new_book_button = driver.FindElement(By.XPath("//a[text()='Create New']"));
+            create_new_book_button.Click();
+
+            var author_input_field = driver.FindElement(By.XPath("//input[@id='Author']"));
+            author_input_field.Click();
+            author_input_field.SendKeys("Steven King");
+
+            var genre_input_field = driver.FindElement(By.XPath("//input[@id='Genre']"));
+            genre_input_field.Click();
+            genre_input_field.SendKeys("Triler");
+
+            var quntity_input_field = driver.FindElement(By.XPath("//input[@id='Quontity']"));
+            quntity_input_field.Click();
+            quntity_input_field.SendKeys("5");
+
+            var create_book_button = driver.FindElement(By.XPath("//input[@type='submit']"));
+            create_book_button.Click();
+
+            var error_header = driver.FindElement(By.XPath("//h1[text()='Error.']"));
+            var error_message = driver.FindElement(By.XPath("//h2[text()='An error occurred while processing your request.']"));
+
+            Assert.That(error_header.Text, Is.EqualTo("Error."));
+            Assert.That(error_message.Text, Is.EqualTo("An error occurred while processing your request."));
+        }
+        [Test]
+        public void Edit_Existing_Book()
+        {
+            driver.Navigate().GoToUrl(base_url + "Books");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var edit_button = driver.FindElement(By.XPath("//a[contains(@href,'Edit')]"));
+            edit_button.Click();
+
+            var name_input_field = driver.FindElement(By.XPath("//input[@id='Name']"));
+            name_input_field.Click();
+            var new_book_name = "ПРИКЛЮЧЕНИЯТА НА ПИНОКИО"+DateTime.Now.Ticks;
+            name_input_field.SendKeys(new_book_name);
+
+            var author_input_field = driver.FindElement(By.XPath("//input[@id='Author']"));
+            author_input_field.Click();
+            author_input_field.SendKeys("КАРЛО КОЛОДИ");
+
+            var genre_input_field = driver.FindElement(By.XPath("//input[@id='Genre']"));
+            genre_input_field.Click();
+            genre_input_field.SendKeys("ДЕТСКА");
+
+            var quntity_input_field = driver.FindElement(By.XPath("//input[@id='Quontity']"));
+            quntity_input_field.Click();
+
+            quntity_input_field.SendKeys("50");
+
+            var save_edit_button = driver.FindElement(By.XPath("//input[@type='submit']"));
+            save_edit_button.Click();
+
+            var books_list = driver.FindElement(By.XPath("//div[@class='container body-content']"));
+
+            Assert.That(books_list.Text, Does.Contain(new_book_name));
+
+        }
+        [Test]
+        public void Edit_Existing_Book_Empty_Fields()
+        {
+            driver.Navigate().GoToUrl(base_url + "Books");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var edit_button = driver.FindElement(By.XPath("//a[contains(@href,'Edit')]"));
+            edit_button.Click();
+
+            var name_input_field = driver.FindElement(By.XPath("//input[@id='Name']"));
+            name_input_field.Clear();
+
+            Thread.Sleep(10000);
+            var save_edit_button = driver.FindElement(By.XPath("//input[@type='submit']"));
+            save_edit_button.Click();
+
+            var error_header = driver.FindElement(By.XPath("//h1[text()='Error.']"));
+            var error_message = driver.FindElement(By.XPath("//h2[text()='An error occurred while processing your request.']"));
+            Thread.Sleep(10000);
+
+            Assert.That(error_header.Text, Is.EqualTo("Error."));
+            Assert.That(error_message.Text, Is.EqualTo("An error occurred while processing your request."));
+
+        }
+        [Test]
+        public void Taken_Books_List()
+        {
+            driver.Navigate().GoToUrl(base_url + "Users");
+            var accept_cookies_button = driver.FindElement(By.XPath("//button[text()='Accept']"));
+            accept_cookies_button.Click();
+
+            var get_a_book_button = driver.FindElement(By.XPath("//a[text()='Get a book']"));
+            get_a_book_button.Click();
+
+            var taken_books_list = driver.FindElement(By.XPath("//div[@class='container body-content']"));
+
+            var date_taken_column = driver.FindElement(By.XPath("//th[contains(text(),'DateTaken')]")).Text;
+            var book_column = driver.FindElement(By.XPath("//th[contains(text(),'Book')]")).Text;
+            var user_column = driver.FindElement(By.XPath("//th[contains(text(),'User')]")).Text;
+            Assert.That(taken_books_list.Text, Does.Contain(date_taken_column));
+            Assert.That(taken_books_list.Text, Does.Contain(book_column));
+            Assert.That(taken_books_list.Text, Does.Contain(user_column));
+
+            var edit_user_button = driver.FindElement(By.XPath("//a[contains(@href,'Edit')]"));
+            var user_details_button = driver.FindElement(By.XPath("//a[contains(@href,'Details')]"));
+            var delete_user_button = driver.FindElement(By.XPath("//a[text()='Delete']"));
+            Assert.That(edit_user_button.Text, Is.EqualTo("Edit"));
+            Assert.That(user_details_button.Text, Is.EqualTo("Details"));
+            Assert.That(delete_user_button.Text, Is.EqualTo("Delete"));
+        }
+        
+    }
+}
